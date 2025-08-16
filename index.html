@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>层叠数字计算挑战</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Lucide icons as SVG */
+        .icon {
+            width: 1.5rem;
+            height: 1.5rem;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .icon-refresh { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'/%3E%3C/svg%3E"); }
+        .icon-target { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='12' r='6'/%3E%3Ccircle cx='12' cy='12' r='2'/%3E%3C/svg%3E"); }
+        .icon-star { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpolygon points='12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26'/%3E%3C/svg%3E"); }
+        .icon-plus { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E"); }
+        .icon-minus { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E"); }
+        .icon-x { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cline x1='18' y1='6' x2='6' y2='18'/%3E%3Cline x1='6' y1='6' x2='18' y2='18'/%3E%3C/svg%3E"); }
+        .icon-divide { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Ccircle cx='12' cy='6' r='2'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3Ccircle cx='12' cy='18' r='2'/%3E%3C/svg%3E"); }
+        .icon-delete { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpolyline points='3,6 5,6 21,6'/%3E%3Cpath d='m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2'/%3E%3C/svg%3E"); }
+        .icon-check { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpolyline points='20,6 9,17 4,12'/%3E%3C/svg%3E"); }
+        .icon-send { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cline x1='22' y1='2' x2='11' y2='13'/%3E%3Cpolygon points='22,2 15,22 11,13 2,9'/%3E%3C/svg%3E"); }
+        .icon-layers { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpolygon points='12,2 2,7 12,12 22,7'/%3E%3Cpolyline points='2,17 12,22 22,17'/%3E%3Cpolyline points='2,12 12,17 22,12'/%3E%3C/svg%3E"); }
+        .icon-trophy { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath d='M6 9H4.5a2.5 2.5 0 0 1 0-5H6'/%3E%3Cpath d='M18 9h1.5a2.5 2.5 0 0 0 0-5H18'/%3E%3Cpath d='M4 22h16'/%3E%3Cpath d='M10 14.66V17c0 .55.47.98.97 1.21C12.04 18.75 13 20.24 13 22'/%3E%3Cpath d='M14 14.66V17c0 .55-.53.98-1.03 1.21C11.96 18.75 11 20.24 11 22'/%3E%3Cpath d='M18 2H6v7a6 6 0 0 0 12 0V2Z'/%3E%3C/svg%3E"); }
+        .icon-zap { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpolygon points='13,2 3,14 12,14 11,22 21,10 12,10'/%3E%3C/svg%3E"); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+
+        // 简化的图标组件
+        const Icon = ({ type, size = 20, className = "" }) => (
+            <span className={`icon icon-${type} ${className}`} style={{ width: size, height: size }}></span>
+        );
+
+        const LayeredNumberGame = () => {
+            const [numberPiles, setNumberPiles] = useState([]);
+            const [targetNumber, setTargetNumber] = useState(0);
+            const [selectedNumbers, setSelectedNumbers] = useState([]);
+            const [currentExpression, setCurrentExpression] = useState([]);
+            const [currentResult, setCurrentResult] = useState(null);
+            const [submittedExpressions, setSubmittedExpressions] = useState([]);
+            const [score, setScore] = useState(0);
+            const [level, setLevel] = useState(1);
+            const [timeLeft, setTimeLeft] = useState(120);
+            const [gameStatus, setGameStatus] = useState('playing');
+
+            // 得分系数映射
+            const getScoreMultiplier = (expressionCount) => {
+                const multipliers = { 1: 1, 2: 2, 3: 4, 4: 8, 5: 16 };
+                return multipliers[expressionCount] || 20;
+            };
+
+            // 生成随机数字
+            const generateRandomNumber = () => Math.floor(Math.random() * 20) + 1;
+
+            // 初始化游戏
+            const initializeGame = useCallback(() => {
+                const piles = [];
+                for (let i = 0; i < 20; i++) {
+                    const layerCount = Math.floor(Math.random() * 3) + 2;
+                    const pile = [];
+                    for (let j = 0; j < layerCount; j++) {
+                        pile.push({
+                            value: generateRandomNumber(),
+                            id: `${i}-${j}`,
+                            layer: j
+                        });
+                    }
+                    piles.push(pile);
+                }
+                
+                setNumberPiles(piles);
+                const target = Math.floor(Math.random() * 80) + 21;
+                setTargetNumber(target);
+                setSelectedNumbers([]);
+                setCurrentExpression([]);
+                setCurrentResult(null);
+                setSubmittedExpressions([]);
+                setGameStatus('playing');
+            }, []);
+
+            // 计时器
+            useEffect(() => {
+                if (timeLeft > 0 && gameStatus === 'playing') {
+                    const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+                    return () => clearTimeout(timer);
+                } else if (timeLeft === 0) {
+                    setGameStatus('lost');
+                }
+            }, [timeLeft, gameStatus]);
+
+            useEffect(() => {
+                initializeGame();
+            }, [initializeGame]);
+
+            // 检查数字是否可选择
+            const isNumberSelectable = (pileIndex) => {
+                const pile = numberPiles[pileIndex];
+                return pile && pile.length > 0;
+            };
+
+            // 获取最上层数字
+            const getTopNumber = (pileIndex) => {
+                const pile = numberPiles[pileIndex];
+                return pile && pile.length > 0 ? pile[pile.length - 1] : null;
+            };
+
+            // 选择数字
+            const selectNumber = (pileIndex) => {
+                if (!isNumberSelectable(pileIndex)) return;
+                
+                const topNumber = getTopNumber(pileIndex);
+                if (!topNumber) return;
+
+                setSelectedNumbers([...selectedNumbers, { value: topNumber.value, pileIndex, numberId: topNumber.id }]);
+                setCurrentExpression([...currentExpression, topNumber.value]);
+                
+                if (currentExpression.length === 0) {
+                    setCurrentResult(topNumber.value);
+                }
+
+                const newPiles = [...numberPiles];
+                newPiles[pileIndex] = [...newPiles[pileIndex]];
+                newPiles[pileIndex].pop();
+                
+                if (newPiles[pileIndex].length > 0) {
+                    const newNumber = {
+                        value: generateRandomNumber(),
+                        id: `${pileIndex}-${Date.now()}`,
+                        layer: 0
+                    };
+                    newPiles[pileIndex] = newPiles[pileIndex].map((num, index) => ({
+                        ...num,
+                        layer: index + 1
+                    }));
+                    newPiles[pileIndex].unshift(newNumber);
+                } else {
+                    const newNumber = {
+                        value: generateRandomNumber(),
+                        id: `${pileIndex}-${Date.now()}`,
+                        layer: 0
+                    };
+                    newPiles[pileIndex] = [newNumber];
+                }
+                
+                setNumberPiles(newPiles);
+            };
+
+            // 选择运算符
+            const selectOperator = (operator) => {
+                if (currentExpression.length === 0 || typeof currentExpression[currentExpression.length - 1] === 'string') return;
+                setCurrentExpression([...currentExpression, operator]);
+            };
+
+            // 计算表达式结果
+            const calculateExpression = (expr) => {
+                try {
+                    let result = expr[0];
+                    for (let i = 1; i < expr.length; i += 2) {
+                        const operator = expr[i];
+                        const operand = expr[i + 1];
+                        
+                        switch (operator) {
+                            case '+':
+                                result += operand;
+                                break;
+                            case '-':
+                                result -= operand;
+                                break;
+                            case '×':
+                                result *= operand;
+                                break;
+                            case '÷':
+                                if (operand === 0) return null;
+                                result /= operand;
+                                break;
+                            default:
+                                return null;
+                        }
+                    }
+                    return Math.round(result * 100) / 100;
+                } catch (error) {
+                    return null;
+                }
+            };
+
+            // 实时计算当前结果
+            useEffect(() => {
+                if (currentExpression.length > 0 && typeof currentExpression[currentExpression.length - 1] === 'number') {
+                    const result = calculateExpression(currentExpression);
+                    setCurrentResult(result);
+                }
+            }, [currentExpression]);
+
+            // 提交当前表达式
+            const submitExpression = () => {
+                if (currentResult === null || currentExpression.length === 0) {
+                    alert('请先完成一个有效的表达式！');
+                    return;
+                }
+
+                const roundedResult = Math.round(currentResult * 100) / 100;
+                
+                if (roundedResult !== targetNumber) {
+                    alert(`表达式结果 ${roundedResult} 不等于目标数字 ${targetNumber}！请修改表达式。`);
+                    return;
+                }
+
+                const newSubmittedExpression = {
+                    expression: [...currentExpression],
+                    result: currentResult,
+                    usedNumbers: [...selectedNumbers]
+                };
+
+                setSubmittedExpressions([...submittedExpressions, newSubmittedExpression]);
+                setCurrentExpression([]);
+                setSelectedNumbers([]);
+                setCurrentResult(null);
+            };
+
+            // 提交最终答案
+            const submitFinalAnswer = () => {
+                if (submittedExpressions.length === 0) {
+                    alert('请先提交至少一个表达式！');
+                    return;
+                }
+
+                const allCorrect = submittedExpressions.every(expr => {
+                    const roundedResult = Math.round(expr.result * 100) / 100;
+                    return roundedResult === targetNumber;
+                });
+                
+                if (allCorrect) {
+                    const baseScore = 100 * level + timeLeft;
+                    const multiplier = getScoreMultiplier(submittedExpressions.length);
+                    const finalScore = baseScore * multiplier;
+                    
+                    setScore(score + finalScore);
+                    setGameStatus('won');
+                } else {
+                    alert('有表达式结果不等于目标数字！');
+                }
+            };
+
+            // 重新开始
+            const restartGame = () => {
+                setLevel(1);
+                setScore(0);
+                setTimeLeft(120);
+                initializeGame();
+            };
+
+            // 下一关
+            const nextLevel = () => {
+                setLevel(level + 1);
+                setTimeLeft(120);
+                initializeGame();
+            };
+
+            const formatTime = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            };
+
+            const operators = [
+                { symbol: '+', icon: 'plus' },
+                { symbol: '-', icon: 'minus' },
+                { symbol: '×', icon: 'x' },
+                { symbol: '÷', icon: 'divide' }
+            ];
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+                    <div className="max-w-6xl mx-auto">
+                        {/* 游戏头部 */}
+                        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h1 className="text-3xl font-bold text-gray-800">层叠数字计算挑战</h1>
+                                <button
+                                    onClick={restartGame}
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                                >
+                                    <Icon type="refresh" size={20} />
+                                    重新开始
+                                </button>
+                            </div>
+                            
+                            <div className="grid grid-cols-5 gap-4 text-center">
+                                <div className="bg-blue-100 rounded-lg p-3">
+                                    <div className="text-blue-600 font-semibold">关卡</div>
+                                    <div className="text-2xl font-bold text-blue-800">{level}</div>
+                                </div>
+                                <div className="bg-green-100 rounded-lg p-3">
+                                    <div className="text-green-600 font-semibold">分数</div>
+                                    <div className="text-2xl font-bold text-green-800">{score}</div>
+                                </div>
+                                <div className="bg-red-100 rounded-lg p-3">
+                                    <Icon type="target" className="mx-auto mb-1 text-red-600" size={20} />
+                                    <div className="text-red-600 font-semibold">目标</div>
+                                    <div className="text-2xl font-bold text-red-800">{targetNumber}</div>
+                                </div>
+                                <div className="bg-orange-100 rounded-lg p-3">
+                                    <div className="text-orange-600 font-semibold">时间</div>
+                                    <div className="text-2xl font-bold text-orange-800">{formatTime(timeLeft)}</div>
+                                </div>
+                                <div className="bg-purple-100 rounded-lg p-3">
+                                    <Icon type="star" className="mx-auto mb-1 text-purple-600" size={20} />
+                                    <div className="text-purple-600 font-semibold">系数</div>
+                                    <div className="text-2xl font-bold text-purple-800">×{getScoreMultiplier(submittedExpressions.length)}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {gameStatus === 'playing' && (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* 左侧：输入区域 */}
+                                <div className="space-y-6">
+                                    {/* 层叠数字堆 */}
+                                    <div className="bg-white rounded-lg shadow-lg p-6">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <Icon type="layers" className="text-blue-600" size={24} />
+                                            <h2 className="text-xl font-bold text-gray-800">层叠数字堆</h2>
+                                            <span className="text-sm text-gray-500">(只能选择最上层数字)</span>
+                                        </div>
+                                        <div className="grid grid-cols-5 gap-3">
+                                            {numberPiles.map((pile, pileIndex) => (
+                                                <div key={pileIndex} className="relative">
+                                                    <div
+                                                        onClick={() => selectNumber(pileIndex)}
+                                                        className="relative cursor-pointer hover:scale-105 transition-transform"
+                                                        style={{ 
+                                                            width: `${48 + (pile.length - 1) * 2}px`, 
+                                                            height: `${48 + (pile.length - 1) * 2}px` 
+                                                        }}
+                                                    >
+                                                        {pile.map((number, arrayIndex) => {
+                                                            const isTopLayer = arrayIndex === pile.length - 1;
+                                                            return (
+                                                                <div
+                                                                    key={number.id}
+                                                                    className={`absolute w-12 h-12 rounded-lg text-lg font-bold flex items-center justify-center border-2 ${
+                                                                        isTopLayer
+                                                                            ? 'bg-blue-500 text-white border-blue-600'
+                                                                            : 'bg-gray-300 text-gray-600 border-gray-400'
+                                                                    }`}
+                                                                    style={{
+                                                                        left: `${arrayIndex * 2}px`,
+                                                                        top: `${arrayIndex * 2}px`,
+                                                                        zIndex: arrayIndex + 1
+                                                                    }}
+                                                                >
+                                                                    {number.value}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                        {pile.length > 1 && (
+                                                            <div className="absolute bottom-0 right-0 w-5 h-5 bg-yellow-500 text-white text-xs rounded-full flex items-center justify-center z-30">
+                                                                {pile.length}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* 运算符 */}
+                                    <div className="bg-white rounded-lg shadow-lg p-6">
+                                        <h2 className="text-xl font-bold text-gray-800 mb-4">运算符</h2>
+                                        <div className="flex gap-4 justify-center">
+                                            {operators.map(({ symbol, icon }) => (
+                                                <button
+                                                    key={symbol}
+                                                    onClick={() => selectOperator(symbol)}
+                                                    className="w-16 h-16 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all transform hover:scale-105 flex items-center justify-center text-2xl font-bold"
+                                                >
+                                                    <Icon type={icon} size={24} />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* 当前表达式 */}
+                                    <div className="bg-white rounded-lg shadow-lg p-6">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h2 className="text-xl font-bold text-gray-800">当前表达式</h2>
+                                            <div className="flex gap-2">
+                                                {currentResult !== null && (
+                                                    <button
+                                                        onClick={submitExpression}
+                                                        className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1 text-sm"
+                                                    >
+                                                        <Icon type="send" size={14} />
+                                                        提交
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="min-h-16 bg-gray-50 rounded-lg p-4 flex items-center">
+                                            {currentExpression.length === 0 ? (
+                                                <span className="text-gray-400 text-lg">请选择数字和运算符...</span>
+                                            ) : (
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    {currentExpression.map((item, index) => (
+                                                        <span
+                                                            key={index}
+                                                            className={`px-3 py-2 rounded-lg text-lg font-bold ${
+                                                                typeof item === 'number'
+                                                                    ? 'bg-blue-100 text-blue-800'
+                                                                    : 'bg-green-100 text-green-800'
+                                                            }`}
+                                                        >
+                                                            {item}
+                                                        </span>
+                                                    ))}
+                                                    {currentResult !== null && (
+                                                        <>
+                                                            <span className="text-2xl text-gray-600 mx-2">=</span>
+                                                            <span className="px-4 py-2 bg-purple-100 text-purple-800 rounded-lg text-xl font-bold">
+                                                                {currentResult}
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 右侧：状态和结果 */}
+                                <div className="space-y-6">
+                                    {/* 表达式状态 */}
+                                    <div className="bg-white rounded-lg shadow-lg p-6">
+                                        <h2 className="text-xl font-bold text-gray-800 mb-4">表达式状态</h2>
+                                        <div className="text-center">
+                                            <div className="text-lg text-gray-600 mb-2">
+                                                目标数字: <span className="text-2xl font-bold text-red-600">{targetNumber}</span>
+                                            </div>
+                                            <div className="text-sm text-gray-500 mb-4">
+                                                每个表达式都必须等于目标数字
+                                            </div>
+                                            
+                                            {currentResult !== null && (
+                                                <div className="mb-4 p-3 rounded-lg bg-blue-50">
+                                                    <div className="text-sm text-blue-600">当前表达式结果:</div>
+                                                    <div className={`text-2xl font-bold ${
+                                                        Math.round(currentResult * 100) / 100 === targetNumber 
+                                                            ? 'text-green-600' 
+                                                            : 'text-orange-600'
+                                                    }`}>
+                                                        {currentResult}
+                                                        {Math.round(currentResult * 100) / 100 === targetNumber && (
+                                                            <span className="text-sm text-green-600 ml-2">✓ 正确</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
+                                            {submittedExpressions.length > 0 && (
+                                                <div className="bg-yellow-50 rounded-lg p-4 mb-4">
+                                                    <div className="text-sm text-yellow-800">
+                                                        已提交 {submittedExpressions.length} 个正确表达式
+                                                    </div>
+                                                    <div className="text-sm text-yellow-800">
+                                                        当前得分系数: <span className="font-bold">×{getScoreMultiplier(submittedExpressions.length)}</span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
+                                            {submittedExpressions.length > 0 && (
+                                                <button
+                                                    onClick={submitFinalAnswer}
+                                                    className="w-full px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center justify-center gap-2 text-lg font-bold"
+                                                >
+                                                    <Icon type="check" size={20} />
+                                                    完成挑战 ({submittedExpressions.length}个表达式)
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* 游戏说明 */}
+                                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
+                                        <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                                            <Icon type="layers" size={16} />
+                                            游戏规则
+                                        </h3>
+                                        <div className="text-sm space-y-1 text-gray-700">
+                                            <div>• 只能选择每堆最上层的数字</div>
+                                            <div>• 选择数字后，该堆会在底部生成新数字</div>
+                                            <div>• 每个表达式都必须等于目标数字</div>
+                                            <div>• 用更多表达式获得更高得分系数</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 游戏结束画面 */}
+                        {gameStatus !== 'playing' && (
+                            <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+                                {gameStatus === 'won' ? (
+                                    <>
+                                        <Icon type="trophy" className="mx-auto mb-4 text-yellow-500" size={64} />
+                                        <h2 className="text-3xl font-bold text-green-600 mb-4">恭喜通关！</h2>
+                                        <p className="text-xl text-gray-600 mb-4">
+                                            你成功用 {submittedExpressions.length} 个表达式计算出了 {targetNumber}！
+                                        </p>
+                                        <p className="text-lg text-purple-600 font-bold mb-6">
+                                            获得 {(100 * level + timeLeft) * getScoreMultiplier(submittedExpressions.length)} 分
+                                        </p>
+                                        <button
+                                            onClick={nextLevel}
+                                            className="px-8 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-lg font-bold"
+                                        >
+                                            下一关
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Icon type="zap" className="mx-auto mb-4 text-red-500" size={64} />
+                                        <h2 className="text-3xl font-bold text-red-600 mb-4">时间到了！</h2>
+                                        <p className="text-xl text-gray-600 mb-6">
+                                            目标数字是 {targetNumber}，再试一次吧！
+                                        </p>
+                                        <button
+                                            onClick={restartGame}
+                                            className="px-8 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-lg font-bold"
+                                        >
+                                            重新开始
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<LayeredNumberGame />, document.getElementById('root'));
+    </script>
+</body>
+</html>
