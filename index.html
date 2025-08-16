@@ -257,14 +257,76 @@
                 setLevel(1);
                 setScore(0);
                 setTimeLeft(120);
+                setSubmittedExpressions([]); // 修复：清空已提交的表达式
+                setCurrentExpression([]);    // 修复：清空当前表达式
+                setSelectedNumbers([]);      // 修复：清空选中的数字
+                setCurrentResult(null);      // 修复：清空当前结果
                 initializeGame();
             };
 
-            // 下一关
-            const nextLevel = () => {
-                setLevel(level + 1);
-                setTimeLeft(120);
-                initializeGame();
+            // 清除最后一个输入
+            const clearLast = () => {
+                if (currentExpression.length === 0) return;
+                
+                const newExpression = [...currentExpression];
+                const removed = newExpression.pop();
+                
+                if (typeof removed === 'number') {
+                    const lastSelectedNumber = selectedNumbers[selectedNumbers.length - 1];
+                    if (lastSelectedNumber) {
+                        const newPiles = [...numberPiles];
+                        const pileIndex = lastSelectedNumber.pileIndex;
+                        
+                        newPiles[pileIndex].push({
+                            value: lastSelectedNumber.value,
+                            id: lastSelectedNumber.numberId,
+                            layer: newPiles[pileIndex].length
+                        });
+                        
+                        if (newPiles[pileIndex].length > 1) {
+                            newPiles[pileIndex].shift();
+                            newPiles[pileIndex] = newPiles[pileIndex].map((num, index) => ({
+                                ...num,
+                                layer: index
+                            }));
+                        }
+                        
+                        setNumberPiles(newPiles);
+                        
+                        const newSelectedNumbers = [...selectedNumbers];
+                        newSelectedNumbers.pop();
+                        setSelectedNumbers(newSelectedNumbers);
+                    }
+                }
+                
+                setCurrentExpression(newExpression);
+            };
+
+            // 重置当前表达式
+            const resetCurrentExpression = () => {
+                const newPiles = [...numberPiles];
+                
+                selectedNumbers.forEach((selectedNum) => {
+                    const pileIndex = selectedNum.pileIndex;
+                    newPiles[pileIndex].push({
+                        value: selectedNum.value,
+                        id: selectedNum.numberId,
+                        layer: newPiles[pileIndex].length
+                    });
+                    
+                    if (newPiles[pileIndex].length > 1) {
+                        newPiles[pileIndex].shift();
+                        newPiles[pileIndex] = newPiles[pileIndex].map((num, index) => ({
+                            ...num,
+                            layer: index
+                        }));
+                    }
+                });
+                
+                setNumberPiles(newPiles);
+                setCurrentExpression([]);
+                setSelectedNumbers([]);
+                setCurrentResult(null);
             };
 
             const formatTime = (seconds) => {
@@ -396,6 +458,21 @@
                                         <div className="flex justify-between items-center mb-4">
                                             <h2 className="text-xl font-bold text-gray-800">当前表达式</h2>
                                             <div className="flex gap-2">
+                                                <button
+                                                    onClick={clearLast}
+                                                    disabled={currentExpression.length === 0}
+                                                    className="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-1 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    <Icon type="delete" size={14} />
+                                                    撤销
+                                                </button>
+                                                <button
+                                                    onClick={resetCurrentExpression}
+                                                    disabled={currentExpression.length === 0}
+                                                    className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    清空
+                                                </button>
                                                 {currentResult !== null && (
                                                     <button
                                                         onClick={submitExpression}
@@ -441,6 +518,41 @@
 
                                 {/* 右侧：状态和结果 */}
                                 <div className="space-y-6">
+                                    {/* 已提交的表达式 */}
+                                    <div className="bg-white rounded-lg shadow-lg p-6">
+                                        <h2 className="text-xl font-bold text-gray-800 mb-4">
+                                            已提交表达式 ({submittedExpressions.length}/5)
+                                        </h2>
+                                        <div className="space-y-3 max-h-60 overflow-y-auto">
+                                            {submittedExpressions.length === 0 ? (
+                                                <p className="text-gray-400 text-center py-8">还没有提交任何表达式</p>
+                                            ) : (
+                                                submittedExpressions.map((expr, index) => (
+                                                    <div key={index} className="bg-gray-50 rounded-lg p-3 flex justify-between items-center">
+                                                        <div className="flex items-center gap-2">
+                                                            {expr.expression.map((item, i) => (
+                                                                <span
+                                                                    key={i}
+                                                                    className={`px-2 py-1 rounded text-sm font-bold ${
+                                                                        typeof item === 'number'
+                                                                            ? 'bg-blue-100 text-blue-800'
+                                                                            : 'bg-green-100 text-green-800'
+                                                                    }`}
+                                                                >
+                                                                    {item}
+                                                                </span>
+                                                            ))}
+                                                            <span className="text-gray-600 mx-1">=</span>
+                                                            <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded font-bold">
+                                                                {expr.result}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+
                                     {/* 表达式状态 */}
                                     <div className="bg-white rounded-lg shadow-lg p-6">
                                         <h2 className="text-xl font-bold text-gray-800 mb-4">表达式状态</h2>
